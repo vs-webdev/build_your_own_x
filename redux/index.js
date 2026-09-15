@@ -60,16 +60,6 @@ const reducer = (state = initialState, action) => {
   }
 };
 
-const state0 = reducer(undefined, {
-  type: CREATE_NOTE
-});
-
-const state1  = reducer(state0, {
-  type: UPDATE_NOTE,
-  id: 1,
-  content: 'Hello, world!'
-});
-
 const validateAction = action => {
   if (!action || typeof action !== 'object' || Array.isArray(action)) {
     throw new Error('Action must be an object!')
@@ -102,14 +92,6 @@ const createStore = reducer => {
   store.dispatch({type: '@@redux/INIT'})
   return store;
 }
-
-const store = createStore(reducer)
-
-store.dispatch({
-  type: CREATE_NOTE
-})
-
-store.getState()
 
 const NoteEditor = ({note, onChangeNote, onCloseNote}) => (
   <div>
@@ -187,7 +169,67 @@ const NoteApp = ({
   </div>
 );
 
+class NoteAppContainer extends React.Component {
+  constructor(props) {
+    super();
+    this.state = props.store.getState()
+    this.onAddNote = this.onAddNote.bind(this)
+    this.onChangeNote = this.onChangeNote.bind(this)
+    this.onOpenNote = this.onOpenNote.bind(this)
+    this.onCloseNote = this.onCloseNote.bind(this)
+  }
+
+  componentWillMount() {
+    this.unsubscribe = this.props.store.subscribe(() => 
+      this.setState(this.props.store.getState())
+    )
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe()
+  }
+
+  onAddNote() {
+    this.props.store.dispatch({
+      type: CREATE_NOTE
+    })
+  }
+
+  onChangeNote(id, content) {
+    this.props.store.dispatch({
+      type: UPDATE_NOTE,
+      id,
+      content
+    });
+  }
+
+  onOpenNote(id) {
+    this.props.store.dispatch({
+      type: OPEN_NOTE,
+      id
+    });
+  }
+
+  onCloseNote() {
+    this.props.store.dispatch({
+      type: CLOSE_NOTE
+    });
+  }
+
+  render() {
+    return (
+      <NoteApp 
+        {...this.state}
+        onAddNote={this.onAddNote}
+        onChangeNote={this.onChangeNote}
+        onOpenNote={this.onOpenNote}
+        onCloseNote={this.onCloseNote}
+      />
+    )
+  }
+}
+
 ReactDOM.render(
-  <pre><NoteApp /></pre>,
+  <NoteAppContainer store={store} />,
   document.getElementById('root')
 );
