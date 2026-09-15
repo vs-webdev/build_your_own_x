@@ -52,6 +52,15 @@ const state1  = reducer(state0, {
   content: 'Hello, world!'
 });
 
+const validateAction = action => {
+  if (!action || typeof action !== 'object' || Array.isArray(action)) {
+    throw new Error('Action must be an object!')
+  }
+  if (typeof action.type === 'undefined') {
+    throw new Error('Action must have a type!')
+  }
+}
+
 ReactDOM.render(
   <pre>{JSON.stringify(state1, null, 2)}</pre>,
   document.getElementById('root')
