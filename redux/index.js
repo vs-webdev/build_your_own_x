@@ -61,6 +61,25 @@ const validateAction = action => {
   }
 }
 
+const createStore = reducer => {
+  let state = undefined;
+  return {
+    dispatch: (action) => {
+      validateAction(action)
+      state = reducer(state, action)
+    },
+    getState: () => state,
+  }
+}
+
+const store = createStore(reducer)
+
+store.dispatch({
+  type: CREATE_NOTE
+})
+
+store.getState()
+
 ReactDOM.render(
   <pre>{JSON.stringify(state1, null, 2)}</pre>,
   document.getElementById('root')
