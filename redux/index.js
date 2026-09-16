@@ -240,7 +240,72 @@ class Provider extends React.Component {
   }
 }
 
+const connect = (
+  mapStateToProps = () => ({}),
+  mapDispatchToProps = () => ({})
+) => Component => {
+  class Connected extends React.Component {
+    onStoreOrPropsChange(props) {
+      const {store} = this.context;
+      const state = store.getState()
+      const stateProps = mapStateToProps(state, props)
+      const dispatchProps = mapDispatchToProps(store.dispatch, props)
+      this.setState({
+        ...stateProps,
+        ...dispatchProps
+      })
+    }
+    componentWillMount() {
+      const {store} = this.context;
+      this.onStoreOrPropsChange(this.props)
+      this.unsubscribe = store.subscribe(() => this.onStoreOrPropsChange(this.props))
+    }
+    componentWillMount() {
+      this.unsubscribe()
+    }
+    render() {
+      return <Component {...this.props} {...this.state} />;
+    }
+  }
+
+  Connected.contextTypes = {
+    store: PropTypes.object
+  }
+
+  return Connected;
+}
+
+const mapStateToProps = state => ({
+  notes: state.notes,
+  openNoteId: state.openNoteId
+})
+
+const mapDispatchToProps = dispatch => ({
+  onAddNote: () => dispatch({
+    type: CREATE_NOTE
+  }),
+  onChangeNote: (id, content) => dispatch({
+    type: UPDATE_NOTE,
+    id,
+    content
+  }),
+  onOpenNote: id => dispatch({
+    type: OPEN_NOTE,
+    id
+  }),
+  onCloseNote: () => dispatch({
+    type: CLOSE_NOTE
+  })
+})
+
+const NoteAppContainer = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(NoteApp);
+
 ReactDOM.render(
-  <NoteAppContainer store={store} />,
+  <Provider store={store} >
+    <NoteAppContainer />
+  </Provider>,
   document.getElementById('root')
 );
