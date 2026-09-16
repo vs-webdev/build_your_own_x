@@ -229,6 +229,17 @@ class NoteAppContainer extends React.Component {
   }
 }
 
+class Provider extends React.Component {
+  getChildContext() {
+    return {
+      store: this.props.store
+    }
+  }
+  render() {
+    return this.props.children;
+  }
+}
+
 ReactDOM.render(
   <NoteAppContainer store={store} />,
   document.getElementById('root')
