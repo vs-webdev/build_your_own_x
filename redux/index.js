@@ -55,11 +55,12 @@ const applyMiddleware = (...middlewares) => store => {
   );
 };
 
-const delayMiddleware = () => next => action => {
-  setTimeout(() => {
-    next(action);
-  }, 1000);
-};
+const thunkMiddleware = ({dispatch, getState}) => next => action => {
+  if (typeof action === 'function') {
+    return action(dispatch, getState)
+  }
+  return next(action)
+}
 
 const loggingMiddleware = ({getState}) => next => action => {
   console.info('before', getState());
@@ -127,6 +128,23 @@ const connect = (
   return Connected;
 };
 
+const createPseudoApi = () => {
+  let _id = 0;
+  const createNote = () => new Promise(resolve => 
+    setTimeout(() => {
+      _id++;
+      resolve({
+        id: `${_id}`
+      })
+    }, 1000)
+  )
+  return {
+    createNote
+  }
+}
+
+const api = createPseudoApi()
+
 const CREATE_NOTE = 'CREATE_NOTE';
 const UPDATE_NOTE = 'UPDATE_NOTE';
 const OPEN_NOTE = 'OPEN_NOTE';
@@ -141,18 +159,23 @@ const initialState = {
 const reducer = (state = initialState, action) => {
   switch (action.type) {
     case CREATE_NOTE: {
-      const id = state.nextNoteId;
+      if (!action.id) {
+        return {
+          ...state,
+          isLoading: true,
+        }
+      }
       const newNote = {
         id,
         content: ''
       };
       return {
         ...state,
-        nextNoteId: id + 1,
-        openNoteId: id,
+        isLoading: false,
+        openNoteId: action.id,
         notes: {
           ...state.notes,
-          [id]: newNote
+          [action.id]: newNote
         }
       };
     }
@@ -188,7 +211,7 @@ const reducer = (state = initialState, action) => {
 };
 
 const store = createStore(reducer, applyMiddleware(
-  delayMiddleware,
+  thunkMiddleware,
   loggingMiddleware
 ));
 
