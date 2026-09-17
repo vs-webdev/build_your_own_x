@@ -215,6 +215,21 @@ const store = createStore(reducer, applyMiddleware(
   loggingMiddleware
 ));
 
+const createNote = () => {
+  return (dispatch) => {
+    dispatch({
+      type: CREATE_NOTE
+    });
+    api.createNote()
+      .then(({id}) => {
+        dispatch({
+          type: CREATE_NOTE,
+          id
+        })
+      })
+  }
+}
+
 const NoteEditor = ({note, onChangeNote, onCloseNote}) => (
   <div>
     <div>
@@ -296,13 +311,12 @@ const NoteApp = ({
 
 const mapStateToProps = state => ({
   notes: state.notes,
+  isLoading: state.isLoading,
   openNoteId: state.openNoteId
 });
 
 const mapDispatchToProps = dispatch => ({
-  onAddNote: () => dispatch({
-    type: CREATE_NOTE
-  }),
+  onAddNote: () => dispatch(createNote()),
   onChangeNote: (id, content) => dispatch({
     type: UPDATE_NOTE,
     id,
